@@ -21,20 +21,7 @@ async function main() {
 
   let proxies = [];
   if (useProxy) {
-    proxies = await readLines('proxy.txt').then((lines) =>
-      lines
-        .map((line) => {
-          const [host, port, username, password] = line.split(':');
-          if (!host || !port) {
-            console.log(
-              `⚠️  ${'proxy.txt 中的代理格式无效'.red}`.yellow
-            );
-            return null;
-          }
-          return { host, port, username, password };
-        })
-        .filter(Boolean)
-    );
+    proxies = await readLines('proxy.txt');
 
     if (tokens.length > proxies.length) {
       console.log(
@@ -46,10 +33,8 @@ async function main() {
 
   const accountType = await askAccountType();
   const bot = new Bot(config, logger);
-
   if (accountType === '单个账户') {
     const singleToken = tokens[0];
-
     if (useProxy) {
       for (const proxy of proxies) {
         bot

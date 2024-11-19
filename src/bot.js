@@ -1,6 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const ProxyChecker = require('./proxyChecker');
+const { SocksProxyAgent } = require('socks-proxy-agent');
 
 class Bot {
   constructor(config, logger) {
@@ -53,9 +54,9 @@ class Bot {
       };
 
       if (proxy) {
-        config.proxy = this.buildProxyConfig(proxy);
+        config.httpsAgent = this.buildProxyConfig(proxy);
       }
-
+      
       const response = await axios.post(this.config.sessionURL, {}, config);
       return response.data.data;
     } catch (error) {
@@ -86,7 +87,7 @@ class Bot {
       };
 
       if (proxy) {
-        config.proxy = this.buildProxyConfig(proxy);
+        config.httpsAgent = this.buildProxyConfig(proxy);
       }
 
       await axios.post(this.config.pingURL, pingData, config);
@@ -94,7 +95,7 @@ class Bot {
       this.logger.info('Ping 已发送', {
         uid,
         browserId,
-        ip: proxy ? proxy.host : '直连',
+        ip: proxy ? proxy : '直连',
       });
     } catch (error) {
       throw new Error('Ping 请求失败');
@@ -102,15 +103,8 @@ class Bot {
   }
 
   buildProxyConfig(proxy) {
-    return proxy && proxy.host
-      ? {
-          host: proxy.host,
-          port: parseInt(proxy.port),
-          auth:
-            proxy.username && proxy.password
-              ? { username: proxy.username, password: proxy.password }
-              : undefined,
-        }
+    return proxy 
+      ? new SocksProxyAgent(proxy)
       : undefined;
   }
 }
